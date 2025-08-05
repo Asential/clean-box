@@ -1,7 +1,7 @@
 {
     "dockerfile_lines": [],
     "graphs": {
-      "langgraph101": "./src/clean_box/clean_box_agent.py:clean_box_agent"
+      "clean_box": "./src/clean_box/clean_box_agent.py:agent"
     },
     "python_version": "3.11",
     "env": ".env",
