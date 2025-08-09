@@ -63,12 +63,10 @@ def should_continue(state: State) -> Literal["Action", "__end__"]:
 
 def parse_email(state: State) -> State:
     """Parse the email content and return the state."""
-    # Here you can add logic to parse the email content
-    # For now, we just return the state as is
     email_content = parse_email_json(state["email_input"])
     update = {
         "email_input": email_content,
-        "messages": [{"role": "user", "content": f"Classify this email  {email_content}"}],
+        "messages": [{"role": "user", "content": f"Process this email for deletion or labelling:  {email_content}"}],
     }
 
     return Command(goto="llm_call", update=update)

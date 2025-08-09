@@ -87,6 +87,6 @@ dataset_examples = [
 
 expected_tool_calls = [
     ["label_email", "done"],
-    ["delete", "done"],
-    ["delete", "done"],
+    ["delete_email", "done"],
+    ["delete_email", "done"],
 ]
