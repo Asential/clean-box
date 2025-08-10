@@ -1,6 +1,8 @@
 from typing import Dict, List, Optional
 from langchain_core.tools import BaseTool
 
+from clean_box.tools.local.email_tools import Question
+
 def get_tools(tool_names: Optional[List[str]] = None) -> List[BaseTool]:
     """Get specified tools or all tools if tool_names is None.
     
@@ -17,6 +19,7 @@ def get_tools(tool_names: Optional[List[str]] = None) -> List[BaseTool]:
     all_tools = {
         "label_email": label_email,
         "delete_email": delete_email,
+        "Question": Question,
         "Done": Done,
     }
    

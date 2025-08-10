@@ -13,6 +13,12 @@ def delete_email(sender: str, date: str) -> str:
     """Delete email."""
     return f"Email from {sender} received on {date} has been deleted."
 
+
+@tool
+class Question(BaseModel):
+      """Question to ask user."""
+      content: str
+
 @tool
 class Done(BaseModel):
     """E-mail has been processed."""
