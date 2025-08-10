@@ -4,10 +4,11 @@ from langchain.chat_models import init_chat_model
 from langgraph.graph import StateGraph, START, END
 from dotenv import load_dotenv
 from langgraph.types import Command, interrupt
+from langgraph.store.base import BaseStore
 
 from clean_box.schemas import State, StateInput, UserPreferences
 from clean_box.tools.base import get_tools, get_tools_by_name
-from clean_box.tools.prompts import AGENT_TOOLS_PROMPT, MEMORY_UPDATE_INSTRUCTIONS, agent_system_prompt, default_background, default_response_preferences
+from clean_box.tools.prompts import AGENT_TOOLS_PROMPT, MEMORY_UPDATE_INSTRUCTIONS, MEMORY_UPDATE_INSTRUCTIONS_REINFORCEMENT, agent_system_prompt, default_background, default_response_preferences
 from clean_box.util import format_email_markdown, format_for_display, parse_email_json
 load_dotenv("../.env")
 
@@ -34,14 +35,18 @@ def update_memory(store, namespace, messages):
     result = llm.invoke(
         [
             {
-                "role": "system", "content":MEMORY_UPDATE_INSTRUCTIONS.format()
+                "role": "system", "content":MEMORY_UPDATE_INSTRUCTIONS.format(
+                    current_profile=user_preferences.value,
+                    namespace=namespace
+                )
              }
-        ]
+        ] + messages
     )
+    store.put(namespace, "user_preferences", result.user_preferences)
 # Nodes
-def llm_call(state: State):
+def llm_call(state: State, store: BaseStore):
     """Basic LLM to classify the email."""
-
+    response_preferences = get_memory(store, ("email_assistant", "response_preferences"), default_response_preferences)
     return {
         "messages": [
             llm_with_tools.invoke(
@@ -49,7 +54,7 @@ def llm_call(state: State):
                     {"role": "system", "content": agent_system_prompt.format(
                         tools_prompt=AGENT_TOOLS_PROMPT,
                         background=default_background,
-                        response_preferences=default_response_preferences, 
+                        response_preferences=response_preferences, 
                         )
                     },
                     
@@ -91,7 +96,7 @@ def parse_email(state: State) -> State:
 
     return Command(goto="llm_call", update=update)
 
-def interrupt_handler(state: State) -> Command[Literal["llm_call", "__end__"]]:
+def interrupt_handler(state: State, store: BaseStore) -> Command[Literal["llm_call", "__end__"]]:
     
     result = []
 
@@ -172,6 +177,10 @@ def interrupt_handler(state: State) -> Command[Literal["llm_call", "__end__"]]:
             user_feedback = response["args"]
             if tool_call["name"] == "Question":
                 result.append({"role": "tool", "content": f"User responded to the question which we can use for any follow up tasks: {user_feedback}", "tool_call_id": tool_call["id"]})
+                update_memory(store, ("email_assistant", "response_preferences"), state["messages"] + result + [{
+                    "role": "user",
+                    "content": f"User gave feedback, which we can use to update the response preferences. Follow all instructions above, and remember: {MEMORY_UPDATE_INSTRUCTIONS_REINFORCEMENT}."
+                }])
             else:
                 raise ValueError(f"Invalid tool call: {tool_call['name']}")
         

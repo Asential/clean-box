@@ -111,3 +111,14 @@ IGNORE:
 Think step by step about what specific feedback is being provided and what specific information should be added or updated in the profile while preserving everything else.
 
 Think carefully and update the memory profile based upon these user messages:"""
+
+
+MEMORY_UPDATE_INSTRUCTIONS_REINFORCEMENT = """
+Remember:
+- NEVER overwrite the entire memory profile
+- ONLY make targeted additions of new information
+- ONLY update specific facts that are directly contradicted by feedback messages
+- PRESERVE all other existing information in the profile
+- Format the profile consistently with the original style
+- Generate the profile as a string
+"""
